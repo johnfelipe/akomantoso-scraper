@@ -530,20 +530,20 @@ def scrape(url):
 
         page = page.strip('/')
         pagename = os.path.basename(page)
-        # download_file(page, 'html')
+        download_file(page, 'html')
 
         for session in get_selectors('html/'+pagename+'.html', '.doclink')[:4]:
 
             link = 'http://www.camara.gov.co/'+session.cssselect('a')[0].get('href').strip('/')
             linkname = os.path.basename(link)
-            # download_file(link, 'doc')
+            download_file(link, 'doc')
 
-            # if guess_filetype('doc/'+linkname+'.doc') == 'pdf':
-            #     pdf_to_text('doc/'+linkname+'.doc')
-            # elif guess_filetype('doc/'+linkname+'.doc') == 'msword':
-            #     doc_to_text('doc/'+linkname+'.doc')
+            if guess_filetype('doc/'+linkname+'.doc') == 'pdf':
+                pdf_to_text('doc/'+linkname+'.doc')
+            elif guess_filetype('doc/'+linkname+'.doc') == 'msword':
+                doc_to_text('doc/'+linkname+'.doc')
 
-            text_to_xml('text/'+linkname+'.txt', link)
+            # text_to_xml('text/'+linkname+'.txt', link)
 
 
 if __name__ == "__main__":
