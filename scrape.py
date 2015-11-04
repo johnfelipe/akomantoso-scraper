@@ -517,40 +517,63 @@ def guess_filetype(path):
     return o.split(';')[0].split('/')[1]
 
 
-def scrape(url):
-
-    pages = 1
-    validpages = []
+def scrape():
 
     print 'Obteniendo páginas válidas ...'
 
-    validpages = ['http://www.camara.gov.co/portal2011/actas-comision-tercera']
+    urlbase = 'http://www.camara.gov.co/portal2011/actas-comision-tercera'
+    urlparams = {}
+    page = update_url_params(urlbase, urlparams)
+    pagename = get_pagename(page, 'html')
 
-    for page in validpages:
+    laws = []
+    projects = []
 
-        page = page.strip('/')
-        pagename = os.path.basename(page)
-        download_file(page, 'html')
+    if not os.path.exists(pagename):
+        download_file(page, pagename)
 
-        for session in get_selectors('html/'+pagename+'.html', '.doclink')[:4]:
+    for session in get_selectors(pagename, 'a.doclink'):
 
-            link = 'http://www.camara.gov.co/'+session.cssselect('a')[0].get('href').strip('/')
-            linkname = os.path.basename(link)
-            download_file(link, 'doc')
+        project = session.get('href')
 
-            if guess_filetype('doc/'+linkname+'.doc') == 'pdf':
-                pdf_to_text('doc/'+linkname+'.doc')
-            elif guess_filetype('doc/'+linkname+'.doc') == 'msword':
-                doc_to_text('doc/'+linkname+'.doc')
+        if project.startswith('/'):
+            project = 'http://www.camara.gov.co'+project
+
+        link_query_dict = parse_qs(urlparse(project).query)
+
+        print project
+
+        # if 'view' in link_query_dict and 'idpry' in link_query_dict:
+        #     if link_query_dict['view'][0] == 'ver_proyectodeley':
+        #         projects.append(project)
+
+    # validpages = ['http://www.camara.gov.co/portal2011/actas-comision-tercera']
+
+    # for page in validpages:
+
+    #     page = page.strip('/')
+    #     pagename = os.path.basename(page)
+    #     download_file(page, 'html')
+
+    #     for session in get_selectors('html/'+pagename+'.html', '.doclink')[:4]:
+
+    #         link = 'http://www.camara.gov.co/'+session.cssselect('a')[0].get('href').strip('/')
+    #         linkname = os.path.basename(link)
+    #         download_file(link, 'doc')
+
+    #         if guess_filetype('doc/'+linkname+'.doc') == 'pdf':
+    #             pdf_to_text('doc/'+linkname+'.doc')
+    #         elif guess_filetype('doc/'+linkname+'.doc') == 'msword':
+    #             doc_to_text('doc/'+linkname+'.doc')
 
             # text_to_xml('text/'+linkname+'.txt', link)
 
 
 if __name__ == "__main__":
 
-    base_dir = '/home/notroot/sayit/sayit.mysociety.org'
-    url = 'https://comision6senado.wordpress.com/category/actas/'
-    scrape(url)
+    base_dir = '/home/felipe/app'
+    scrape()
+
 
     # xmldir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
 
