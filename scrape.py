@@ -430,9 +430,9 @@ if __name__ == "__main__":
     scrape()
 
 
-    # xmldir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
+    xmldir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
 
-    # for f in os.listdir(xmldir):
-    #     if f.endswith('.xml'):
-    #         xmlpath = os.path.join(xmldir, f)
-    #         execute_process(base_dir+'/manage.py load_akomantoso --file='+xmlpath+' --instance='+_domain.split('.')[0]+' --commit --merge-existing')
+    for f in os.listdir(xmldir):
+        if f.endswith('.xml'):
+            xmlpath = os.path.join(xmldir, f)
+            execute_process(base_dir+'/manage.py load_akomantoso --file='+xmlpath+' --instance='+_domain.split('.')[0]+' --commit --merge-existing')
