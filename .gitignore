@@ -3,5 +3,6 @@ virtualenv
 *.xml
 *.txt
 *.pdf
-*.doc
 *.sublime-workspace
+*.doc
+*.docx
