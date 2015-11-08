@@ -93,6 +93,7 @@ _correct_speakers = [
     [r'\buso\s*de\s*la\s*palabra\b', r'######'],
     [r'\btoma\s*la\s*palabra\b', r'######'],
     [r'\bpide\s*la\s*palabra\b', r'######'],
+    [r'\bda\s*la\s*palabra\b', r'######'],
 ]
 
 _extract_speakers = [
@@ -174,8 +175,14 @@ def get_narratives(text):
 
 
 def get_date_object(text):
-    m = re.search(r'SESION ORDINARIA DEL (\S*)(\s*)([0-9]*)(\s*)de(\s*)(\S*)(\s*)de(\s*)([0-9]*)', text, flags=re.S|re.I)
-    return datetime.strptime(m.group(3)+'-'+_months[m.group(6).lower()]+'-'+m.group(9), '%d-%m-%Y')
+    m = re.search(r'SESI.*N\s*(?:EXTRAORDINARIA|ORDINARIA)\s*DEL\s*(?:\S*)(?:\s*)(\S*)(\s*)([0-9]*)(\s*)de(\s*)(\S*)(\s*)de(\s*)([0-9]*)', text, flags=re.S|re.I)
+    # print m.groups()
+    day = m.group(3)
+    month = _months[m.group(6).lower()]
+    year = m.group(9)
+    if not day:
+        day = '01'
+    return datetime.strptime(day+'-'+month+'-'+year, '%d-%m-%Y')
 
 
 def get_acta_intro(text):
@@ -193,9 +200,47 @@ def get_questions_match(text):
 
 def get_narrative_questions_speech(text):
 
-    narrative, speech = re.findall(r'(.*)\d*\.\s*proposiciones\s*y\s*varios(.*)', text, flags=re.S|re.I)[0]
-    # speech = re.findall(r'(.*)nota\s*secretarial:', speech, flags=re.S|re.I)[0]
-    narrative = re.findall(r'\s*saludo\s*protocolario(.*)', narrative, flags=re.S|re.I)[0]
+    speech = re.findall(r'\d*(?:\.|\))\s*proposiciones\s*y\s*varios(.*)', text, flags=re.S|re.I)
+
+    if not speech:
+        speech = re.findall(r'(.*)\d*(?:\.|\))\s*aprobaci.*n\s*del\s*orden\s*del\s*d.*a(.*)', text, flags=re.S|re.I)
+
+    if not speech:
+        speech = ['']
+
+    if isinstance(speech, list):
+        speech = speech[0]
+
+    if isinstance(speech, list):
+        speech = speech[0]
+
+    prenarrative = re.findall(r'(.*)\d*(?:\.|\))\s*proposiciones\s*y\s*varios', text, flags=re.S|re.I)
+
+    if not prenarrative:
+        prenarrative = re.findall(r'(.*)nota\s*secretarial:', text, flags=re.S|re.I)
+
+    if isinstance(prenarrative, list):
+        prenarrative = prenarrative[0]
+
+    if isinstance(prenarrative, list):
+        prenarrative = prenarrative[0]
+
+    narrative = re.findall(r'\s*saludo\s*protocolario(.*)', prenarrative, flags=re.S|re.I)
+
+    if not narrative:
+        narrative = re.findall(r'\s*inicio\s*a\s*la\s*sesi.*n\s*(?:extraordinaria|ordinaria)(.*)', prenarrative, flags=re.S|re.I)
+
+    if not narrative:
+        narrative = re.findall(r'\s*saluda\s*a\s*todas\s*las\s*personas(.*)', prenarrative, flags=re.S|re.I)
+
+    if not narrative:
+        narrative = re.findall(r'(?:preside|abrir)\s*la\s*sesi.*n(.*)', prenarrative, flags=re.S|re.I)
+
+    if isinstance(narrative, list):
+        narrative = narrative[0]
+
+    if isinstance(narrative, list):
+        narrative = narrative[0]
 
     return (narrative, speech)
 
@@ -205,6 +250,7 @@ def process_narratives(text):
         text = re.sub(r, f, text)
 
     return text.strip()
+
 
 def process_speech(text):
     speech = ''
@@ -430,9 +476,9 @@ if __name__ == "__main__":
     scrape()
 
 
-    xmldir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
+    # xmldir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xml')
 
-    for f in os.listdir(xmldir):
-        if f.endswith('.xml'):
-            xmlpath = os.path.join(xmldir, f)
-            execute_process(base_dir+'/manage.py load_akomantoso --file='+xmlpath+' --instance='+_domain.split('.')[0]+' --commit --merge-existing')
+    # for f in os.listdir(xmldir):
+    #     if f.endswith('.xml'):
+    #         xmlpath = os.path.join(xmldir, f)
+    #         execute_process(base_dir+'/manage.py load_akomantoso --file='+xmlpath+' --instance='+_domain.split('.')[0]+' --commit --merge-existing')
