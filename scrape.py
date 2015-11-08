@@ -472,7 +472,7 @@ def scrape():
 
 if __name__ == "__main__":
 
-    base_dir = '/home/felipe/app'
+    base_dir = '/home/notroot/sayit/sayit.mysociety.org'
     scrape()
 
 
