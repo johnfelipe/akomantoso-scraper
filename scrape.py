@@ -175,14 +175,15 @@ def get_narratives(text):
 
 
 def get_date_object(text):
-    m = re.search(r'SESI.*N\s*(?:EXTRAORDINARIA|ORDINARIA)\s*DEL\s*(?:\S*)(?:\s*)(\S*)(\s*)([0-9]*)(\s*)de(\s*)(\S*)(\s*)de(\s*)([0-9]*)', text, flags=re.S|re.I)
-    # print m.groups()
-    day = m.group(3)
-    month = _months[m.group(6).lower()]
-    year = m.group(9)
+    d = re.search(r'SESI.*N\s*(?:EXTRAORDINARIA|ORDINARIA)\s*DEL\s*(?:\S*)(?:\s*)(\S*)(\s*)([0-9]*)(\s*)de(\s*)(\S*)(\s*)de(\s*)([0-9]*)', text, flags=re.S|re.I)
+    h = re.search(r'hora\s*inicio:\s*(\d*)\s*:\s*(\d*)\s*(AM|PM|A.M.|P.M.|Am.|Pm.)', text, flags=re.S|re.I)
+    day = d.group(3)
+    month = _months[d.group(6).lower()]
+    year = d.group(9)
+    hour = h.group(1)+':'+h.group(2)+h.group(3).replace('.', '').lower()
     if not day:
         day = '01'
-    return datetime.strptime(day+'-'+month+'-'+year, '%d-%m-%Y')
+    return datetime.strptime(day+'-'+month+'-'+year+' '+hour, '%d-%m-%Y %I:%M%p')
 
 
 def get_acta_intro(text):
@@ -242,7 +243,14 @@ def get_narrative_questions_speech(text):
     if isinstance(narrative, list):
         narrative = narrative[0]
 
-    return (narrative, speech)
+    nota = re.findall(r'(.*)nota\s*secretarial:(.*)', speech, flags=re.S|re.I)
+    if nota:
+        speech = nota[0][0]
+        nota = nota[0][1]
+    else:
+        nota = ''
+
+    return (narrative, speech, nota)
 
 
 def process_narratives(text):
@@ -277,7 +285,7 @@ def text_to_xml(fname):
 
     dateobject = get_date_object(fcontent)
     acta, intro = get_acta_intro(fcontent)
-    narrative, speech = get_narrative_questions_speech(intro)
+    narrative, speech, nota = get_narrative_questions_speech(intro)
     speech = process_speech(speech)
 
     flist = filter(None, speech.decode('utf-8').split('\n'))
@@ -340,6 +348,12 @@ def text_to_xml(fname):
 
     for key, value in _persons.iteritems():
         se_person_tag = SubElement(references, 'TLCPerson', **value)
+
+    na_1 = SubElement(debate_section_3, 'speech', by='', startTime=unicode(dateobject.strftime('%Y-%m-%dT%H:%M:%S')))
+    sef_1 = SubElement(na_1, 'from')
+    sef_1.text = unicode('OTROS')
+    sep_1 = SubElement(na_1, 'p')
+    sep_1.text = unicode(nota.decode('utf-8').strip())
 
     xml_content = xml.dom.minidom.parseString(tostring(akoman))
 
